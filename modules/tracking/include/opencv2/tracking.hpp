@@ -146,6 +146,7 @@ public:
     // FIXIT use interface
     typedef void (*FeatureExtractorCallbackFN)(const Mat, const Rect, Mat&);
     virtual void setFeatureExtractor(FeatureExtractorCallbackFN callback, bool pca_func = false) = 0;
+    CV_WRAP __attribute__((visibility("default"))) cv::Mat getResponse() const;
 };
 
 

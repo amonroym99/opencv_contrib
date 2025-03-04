@@ -80,6 +80,7 @@ public:
     virtual bool update(InputArray image, Rect& boundingBox) CV_OVERRIDE;
     void setFeatureExtractor(void (*f)(const Mat, const Rect, Mat&), bool pca_func = false) CV_OVERRIDE;
 
+    cv::Mat getResponse() const;
     TrackerKCF::Params params;
     Ptr<TrackerKCFModel> model;
 
@@ -297,21 +298,33 @@ private:
       // extract and pre-process the patch
       // get non compressed descriptors
       for(unsigned i=0;i<descriptors_npca.size()-extractor_npca.size();i++){
-        if(!getSubWindow(img,roi, features_npca[i], img_Patch, descriptors_npca[i]))return false;
+        if(!getSubWindow(img,roi, features_npca[i], img_Patch, descriptors_npca[i])){
+          std::cout << "1" << std::endl;
+          return false;
+        }
       }
       //get non-compressed custom descriptors
       for(unsigned i=0,j=(unsigned)(descriptors_npca.size()-extractor_npca.size());i<extractor_npca.size();i++,j++){
-        if(!getSubWindow(img,roi, features_npca[j], extractor_npca[i]))return false;
+        if(!getSubWindow(img,roi, features_npca[j], extractor_npca[i])){
+          std::cout << "2" << std::endl;
+          return false;
+        }
       }
       if(features_npca.size()>0)merge(features_npca,X[1]);
 
       // get compressed descriptors
       for(unsigned i=0;i<descriptors_pca.size()-extractor_pca.size();i++){
-        if(!getSubWindow(img,roi, features_pca[i], img_Patch, descriptors_pca[i]))return false;
+        if(!getSubWindow(img,roi, features_pca[i], img_Patch, descriptors_pca[i])){
+          std::cout << "3" << std::endl;
+          return false;
+        }
       }
       //get compressed custom descriptors
       for(unsigned i=0,j=(unsigned)(descriptors_pca.size()-extractor_pca.size());i<extractor_pca.size();i++,j++){
-        if(!getSubWindow(img,roi, features_pca[j], extractor_pca[i]))return false;
+        if(!getSubWindow(img,roi, features_pca[j], extractor_pca[i])){
+          std::cout << "4" << std::endl;
+          return false;
+        }
       }
       if(features_pca.size()>0)merge(features_pca,X[0]);
 
@@ -351,10 +364,10 @@ private:
 
       // extract the maximum response
       minMaxLoc( response, &minVal, &maxVal, &minLoc, &maxLoc );
-      if (maxVal < params.detect_thresh)
-      {
-          return false;
-      }
+//      if (maxVal < params.detect_thresh)
+//      {
+//          return false;
+//      }
       roi.x+=(maxLoc.x-roi.width/2+1);
       roi.y+=(maxLoc.y-roi.height/2+1);
     }
@@ -366,24 +379,45 @@ private:
     boundingBox.width = (resizeImage?roi.width*2:roi.width)/2;
     boundingBox.height = (resizeImage?roi.height*2:roi.height)/2;
 
+    // Print the bounding box values
+    // std::cout << "Bounding Box: "
+    //           << "x = " << boundingBox.x << ", "
+    //           << "y = " << boundingBox.y << ", "
+    //           << "width = " << boundingBox.width << ", "
+    //           << "height = " << boundingBox.height
+    //           << std::endl;
+
+
     // extract the patch for learning purpose
     // get non compressed descriptors
     for(unsigned i=0;i<descriptors_npca.size()-extractor_npca.size();i++){
-      if(!getSubWindow(img,roi, features_npca[i], img_Patch, descriptors_npca[i]))return false;
+      if(!getSubWindow(img,roi, features_npca[i], img_Patch, descriptors_npca[i])){
+          std::cout << "5" << std::endl;
+          return false;
+        }
     }
     //get non-compressed custom descriptors
     for(unsigned i=0,j=(unsigned)(descriptors_npca.size()-extractor_npca.size());i<extractor_npca.size();i++,j++){
-      if(!getSubWindow(img,roi, features_npca[j], extractor_npca[i]))return false;
+      if(!getSubWindow(img,roi, features_npca[j], extractor_npca[i])){
+          std::cout << "6" << std::endl;
+          return false;
+        }
     }
     if(features_npca.size()>0)merge(features_npca,X[1]);
 
     // get compressed descriptors
     for(unsigned i=0;i<descriptors_pca.size()-extractor_pca.size();i++){
-      if(!getSubWindow(img,roi, features_pca[i], img_Patch, descriptors_pca[i]))return false;
+      if(!getSubWindow(img,roi, features_pca[i], img_Patch, descriptors_pca[i])){
+          std::cout << "7" << std::endl;
+          return false;
+        }
     }
     //get compressed custom descriptors
     for(unsigned i=0,j=(unsigned)(descriptors_pca.size()-extractor_pca.size());i<extractor_pca.size();i++,j++){
-      if(!getSubWindow(img,roi, features_pca[j], extractor_pca[i]))return false;
+      if(!getSubWindow(img,roi, features_pca[j], extractor_pca[i])){
+          std::cout << "8" << std::endl;
+          return false;
+        }
     }
     if(features_pca.size()>0)merge(features_pca,X[0]);
 
@@ -465,7 +499,7 @@ private:
     int x2 = cvRound(boundingBox.x + boundingBox.width);
     int y2 = cvRound(boundingBox.y + boundingBox.height);
     boundingBoxResult = Rect(x1, y1, x2 - x1, y2 - y1) & Rect(Point(0, 0), image.size());
-
+    Mat a = getResponse();
     return true;
   }
 
@@ -892,6 +926,11 @@ private:
       use_custom_extractor_npca = true;
     }
   }
+
+  __attribute__((visibility("default"))) cv::Mat TrackerKCFImpl::getResponse() const {
+    return response.clone();
+  }
+
   /*----------------------------------------------------------------------*/
 
 
