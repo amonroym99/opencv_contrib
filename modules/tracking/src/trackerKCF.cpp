@@ -83,6 +83,8 @@ public:
     cv::Mat getResponse() const;
     TrackerKCF::Params params;
     Ptr<TrackerKCFModel> model;
+    Mat response; // detection result
+    Mat respons_cpy; // detection result
 
 protected:
     void createHanningWindow(OutputArray dest, const cv::Size winSize, const int type) const;
@@ -122,7 +124,6 @@ private:
     Mat new_alphaf, alphaf;	// training coefficients
     Mat new_alphaf_den, alphaf_den; // for splitted training coefficients
     Mat z; // model
-    Mat response; // detection result
     Mat old_cov_mtx, proj_mtx; // for feature compression
 
     // pre-defined Mat variables for optimization of private functions
@@ -362,6 +363,7 @@ private:
       else
         calcResponse(alphaf,kf,response, spec);
 
+      response_cpy = response.clone();
       // extract the maximum response
       minMaxLoc( response, &minVal, &maxVal, &minLoc, &maxLoc );
 //      if (maxVal < params.detect_thresh)
@@ -378,15 +380,6 @@ private:
     boundingBox.y=(resizeImage?roi.y*2:roi.y)+(resizeImage?roi.height*2:roi.height)/4;
     boundingBox.width = (resizeImage?roi.width*2:roi.width)/2;
     boundingBox.height = (resizeImage?roi.height*2:roi.height)/2;
-
-    // Print the bounding box values
-    // std::cout << "Bounding Box: "
-    //           << "x = " << boundingBox.x << ", "
-    //           << "y = " << boundingBox.y << ", "
-    //           << "width = " << boundingBox.width << ", "
-    //           << "height = " << boundingBox.height
-    //           << std::endl;
-
 
     // extract the patch for learning purpose
     // get non compressed descriptors
@@ -499,7 +492,6 @@ private:
     int x2 = cvRound(boundingBox.x + boundingBox.width);
     int y2 = cvRound(boundingBox.y + boundingBox.height);
     boundingBoxResult = Rect(x1, y1, x2 - x1, y2 - y1) & Rect(Point(0, 0), image.size());
-    Mat a = getResponse();
     return true;
   }
 

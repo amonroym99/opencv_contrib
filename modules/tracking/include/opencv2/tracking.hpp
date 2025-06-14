@@ -114,6 +114,9 @@ public:
       CUSTOM = (1 << 2)
     };
 
+    Mat response; // detection result
+    Mat response_cpy;
+
     struct CV_EXPORTS_W_SIMPLE Params
     {
         CV_WRAP Params();
